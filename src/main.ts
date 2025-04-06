@@ -1,24 +1,64 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import './scss/style.scss'
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+import * as THREE from 'three'
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+import { options } from './options'
+
+import shader_skyFrag from './glsl/skyFrag.glsl?raw';
+import shader_skyVert from './glsl/skyVert.glsl?raw';
+
+class App {
+    private scene: THREE.Scene;
+    private camera: THREE.PerspectiveCamera;
+    private renderer: THREE.WebGLRenderer;
+    
+    private sky = {
+        geo: new THREE.SphereGeometry(1000, 64, 64),
+        mat: new THREE.ShaderMaterial({}),
+        
+    };
+
+    constructor() {
+        this.scene = new THREE.Scene();
+
+        const aspect = window.innerWidth / window.innerHeight;
+        this.camera = new THREE.PerspectiveCamera(options.fov, aspect, options.near, options.far);
+
+        this.renderer = new THREE.WebGLRenderer({ antialias: true });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+
+        const element = document.getElementById('canvas-3d');
+        if (element) {
+            element.appendChild(this.renderer.domElement);
+        }
+
+        window.addEventListener('resize', this.onWindowResize.bind(this));
+    }
+
+    private onWindowResize() {
+        const aspect = window.innerWidth / window.innerHeight;
+        this.camera.aspect = aspect;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    private animate() {
+        this.renderer.setClearColor(options.clear_colour, 1)
+
+        this.renderer.render(this.scene, this.camera);
+    }
+
+    public start() {
+        this.renderer.setAnimationLoop(() => {
+            this.animate();
+        });
+    }
+}
+
+function main() {
+    const app = new App();
+
+    app.start();
+}
+
+main();
